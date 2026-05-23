@@ -117,7 +117,7 @@ replay_diffs (id, original_run_id, replay_run_id,
               divergence_span_id, summary)
 ```
 
-`kind` values: `graph` · `node` · `llm_call` · `tool_call`
+`kind` values: `graph`, `node`, `llm_call`, `tool_call`
 
 ---
 
