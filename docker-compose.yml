@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: reagent
+      POSTGRES_PASSWORD: reagent
+      POSTGRES_DB: reagent
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reagent"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: ./reagent_server
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://reagent:reagent@postgres:5432/reagent
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./reagent_server:/app
+    command: uvicorn reagent_server.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:

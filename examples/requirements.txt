@@ -1,0 +1,8 @@
+# Zero-cost demo (no API key needed)
+httpx>=0.27
+pydantic>=2.7
+
+# Real LangGraph demo (needs ANTHROPIC_API_KEY)
+langgraph>=0.2
+langchain-anthropic>=0.2
+langchain-core>=0.3
