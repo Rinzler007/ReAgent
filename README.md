@@ -4,7 +4,7 @@
 
 The SDK auto-instruments agent runs via a LangGraph callback handler or a manual context-manager API. The replay engine re-executes recorded runs with mocked tool responses to isolate prompt/model regressions from environmental changes. Postgres-backed, ~5-min self-host via Docker.
 
-**Stack:** Python, FastAPI, PostgreSQL, LangGraph
+**Stack:** Python, FastAPI, PostgreSQL, LangGraph, React, Vite
 
 ---
 
@@ -42,7 +42,15 @@ pip install -e reagent_sdk/
 python examples/hello_trace.py
 ```
 
-### 4. See your trace
+### 4. Open the trace explorer
+
+```bash
+cd reagent_ui && npm install && npm run dev
+```
+
+Visit `http://localhost:5173` to browse runs and inspect span trees.
+
+### 5. Or check via API
 
 ```bash
 curl http://localhost:8000/v1/runs | python -m json.tool
@@ -109,8 +117,8 @@ Your Agent Code (LangGraph app: unchanged)
 reagent SDK  (thin Python wrapper)
        │  HTTP POST /v1/traces
        \/
-reagent Server  (FastAPI)
-       │
+reagent Server  (FastAPI)        <----- React UI  (Vite, port 5173)
+       │                                  │  GET /v1/runs, /v1/runs/{id}
        \/
 PostgreSQL  (runs / spans / replay_diffs)
 ```
