@@ -68,6 +68,46 @@ python examples/langgraph_demo.py "What caused the 2008 financial crisis ?"
 
 ---
 
+## Replaying a run
+
+Record a baseline run, then replay it with a different model. Tool outputs are served from the recording so the diff isolates LLM reasoning from tool variance.
+
+```bash
+# Record
+venv/bin/python examples/replay_demo.py
+
+# Replay with a different model (paste your run ID)
+venv/bin/python examples/replay_demo.py --replay <run-id> --model claude-haiku-4-5-20251001
+```
+
+Or use `ReplayEngine` directly in your own code:
+
+```python
+import httpx
+from reagent_sdk import Recorder, ReAgentCallbackHandler, ReplayEngine
+
+server_url = "http://localhost:8000"
+original_run_id = "..."
+
+spans = httpx.get(f"{server_url}/v1/runs/{original_run_id}/spans").json()
+engine = ReplayEngine(spans)
+
+wrapped_tools = engine.wrap_tools(tools)
+app = build_graph(new_llm, tools=wrapped_tools)
+
+with recorder.run(metadata={"replay_of": original_run_id}) as new_run:
+    handler = ReAgentCallbackHandler(new_run)
+    app.invoke(state, config={"callbacks": [handler]})
+
+diff = engine.diff(spans, new_run._all_spans())
+httpx.post(
+    f"{server_url}/v1/runs/{original_run_id}/replay",
+    json={"new_run_id": str(new_run.id), "summary": diff},
+)
+```
+
+---
+
 ## Instrumenting your own agent
 
 ### LangGraph (recommended)
