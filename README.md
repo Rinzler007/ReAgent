@@ -2,7 +2,7 @@
 
 **Deterministic replay & diff harness for LangGraph agents.**
 
-The SDK auto-instruments agent runs via a lightweight context-manager API. The replay engine re-executes recorded runs with mocked tool responses to isolate prompt/model regressions from environmental changes. Postgres-backed, ~5-min self-host via Docker.
+The SDK auto-instruments agent runs via a LangGraph callback handler or a manual context-manager API. The replay engine re-executes recorded runs with mocked tool responses to isolate prompt/model regressions from environmental changes. Postgres-backed, ~5-min self-host via Docker.
 
 **Stack:** Python, FastAPI, PostgreSQL, LangGraph
 
@@ -29,6 +29,10 @@ docker compose up -d
 ### 2. Install the SDK
 
 ```bash
+# For LangGraph auto-instrumentation (recommended)
+pip install -e "reagent_sdk/[langchain]"
+
+# For manual instrumentation only
 pip install -e reagent_sdk/
 ```
 
@@ -58,6 +62,26 @@ python examples/langgraph_demo.py "What caused the 2008 financial crisis ?"
 
 ## Instrumenting your own agent
 
+### LangGraph (recommended)
+
+Pass `ReAgentCallbackHandler` in the `config` dict. Your node functions stay clean with no tracing boilerplate.
+
+```python
+from reagent_sdk import Recorder, ReAgentCallbackHandler
+
+recorder = Recorder(agent_name="my-agent")
+
+with recorder.run(metadata={"model": "claude-haiku-4-5"}) as run:
+    handler = ReAgentCallbackHandler(run)
+    app.invoke(initial_state, config={"callbacks": [handler]})
+```
+
+Graph, node, LLM call and tool call spans are all captured automatically.
+
+### Manual wrapping (any framework)
+
+For non-LangGraph agents or finer-grained control, use the context manager API directly.
+
 ```python
 from reagent_sdk import Recorder
 
@@ -72,7 +96,7 @@ with recorder.run(metadata={"model": "claude-haiku-4-5"}) as run:
                 tool.set_output({"result": result})
 ```
 
-Traces are shipped automatically when the `with recorder.run()` block exits. Telemetry errors are silenced, so your agent code always wins.
+Traces are shipped automatically when the `with recorder.run()` block exits. Telemetry errors are silenced so your agent code always wins.
 
 ---
 
@@ -80,7 +104,7 @@ Traces are shipped automatically when the `with recorder.run()` block exits. Tel
 
 ```
 Your Agent Code (LangGraph app: unchanged)
-       │  context-manager instrumentation
+       │  callback or context-manager instrumentation
        \/
 reagent SDK  (thin Python wrapper)
        │  HTTP POST /v1/traces
@@ -113,7 +137,7 @@ runs (id, parent_run_id, agent_name, status, started_at,
 spans (id, run_id, parent_span_id, kind, name,
        started_at, finished_at, input, output, error)
 
-replay_diffs (id, original_run_id, replay_run_id,
+replay_diffs (id original_run_id, replay_run_id,
               divergence_span_id, summary)
 ```
 

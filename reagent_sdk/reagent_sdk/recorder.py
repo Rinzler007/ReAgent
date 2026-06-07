@@ -55,6 +55,31 @@ class Span:
     def set_output(self, output: dict[str, Any]) -> None:
         self.output = output
 
+    def finish(
+        self,
+        output: dict[str, Any] | None = None,
+        error: str | None = None,
+    ) -> None:
+        """Close the span imperatively (used by the callback handler)."""
+        self.finished_at = _now()
+        if output is not None:
+            self.output = output
+        if error is not None:
+            self.error = error
+
+    def start_child(
+        self,
+        name: str,
+        kind: str,
+        input: dict[str, Any] | None = None,
+    ) -> "Span":
+        """Create and register a child span without a context manager."""
+        span = Span(name=name, kind=kind, run_id=self.run_id,
+                    parent_span_id=self.id, input=input)
+        with self._lock:
+            self._children.append(span)
+        return span
+
     @contextmanager
     def child(
         self,
@@ -116,6 +141,18 @@ class Run:
         self.metadata: dict[str, Any] = metadata or {}
         self._root_spans: list[Span] = []
         self._lock = threading.Lock()
+
+    def start_span(
+        self,
+        name: str,
+        kind: str,
+        input: dict[str, Any] | None = None,
+    ) -> Span:
+        """Create and register a root span without a context manager."""
+        s = Span(name=name, kind=kind, run_id=self.id, input=input)
+        with self._lock:
+            self._root_spans.append(s)
+        return s
 
     @contextmanager
     def span(
@@ -187,7 +224,7 @@ class Recorder:
         """
         Context manager for a full agent run. Automatically ships the run
         to the server when the block exits. Telemetry errors never propagate
-        to the caller — your agent code always wins.
+        to the caller : your agent code always wins.
         """
         r = Run(agent_name=self.agent_name, metadata=metadata,
                 parent_run_id=parent_run_id)
@@ -210,4 +247,4 @@ class Recorder:
                 resp.raise_for_status()
         except Exception as exc:
             # Telemetry must never crash user code
-            print(f"[reagent] Warning: failed to ship trace — {exc}")
+            print(f"[reagent] Warning: failed to ship trace : {exc}")

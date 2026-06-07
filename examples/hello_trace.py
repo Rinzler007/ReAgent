@@ -1,5 +1,5 @@
 """
-hello_trace.py — Week 1 smoke demo. No API key, no real LLM.
+hello_trace.py : Zero-cost demo. No API key, no real LLM.
 
 Run:
     cd ReAgent

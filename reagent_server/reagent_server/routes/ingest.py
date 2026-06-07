@@ -1,4 +1,4 @@
-"""POST /v1/traces — receive a completed run with all its spans."""
+"""POST /v1/traces : receive a completed run with all its spans."""
 from fastapi import APIRouter, HTTPException
 from psycopg.errors import UniqueViolation
 

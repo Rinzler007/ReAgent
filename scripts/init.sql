@@ -1,4 +1,4 @@
--- ReAgent schema — uses gen_random_uuid() (built-in since Postgres 13, no extension needed)
+-- ReAgent schema : uses gen_random_uuid() (built-in since Postgres 13, no extension needed)
 
 CREATE TABLE IF NOT EXISTS runs (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),

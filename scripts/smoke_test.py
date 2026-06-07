@@ -1,5 +1,5 @@
 """
-smoke_test.py — Verifies the full stack without Docker.
+smoke_test.py : Verifies the full stack without Docker.
 
 Prerequisites:
     pip install -e reagent_sdk/ -e reagent_server/ httpx pytest

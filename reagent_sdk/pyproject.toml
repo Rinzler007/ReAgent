@@ -11,6 +11,9 @@ dependencies = [
     "pydantic>=2.7",
 ]
 
+[project.optional-dependencies]
+langchain = ["langchain-core>=0.3"]
+
 [tool.setuptools]
 packages = ["reagent_sdk"]
 package-dir = {"" = "."}

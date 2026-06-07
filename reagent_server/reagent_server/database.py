@@ -1,4 +1,4 @@
-"""Database connection — uses psycopg3 (sync) for simplicity in Week 1."""
+"""Database connection : uses psycopg3 (sync)."""
 import os
 from contextlib import contextmanager
 from typing import Generator
@@ -12,7 +12,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://reagent:reagent@localhost
 
 def get_connection() -> psycopg.Connection:
     conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
-    # Register dict/list → JSONB adapter so %s works for jsonb columns
+    # Register dict/list : JSONB adapter so %s works for jsonb columns
     conn.adapters.register_dumper(dict, JsonbDumper)
     conn.adapters.register_dumper(list, JsonbDumper)
     return conn
