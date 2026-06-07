@@ -127,12 +127,14 @@ PostgreSQL  (runs / spans / replay_diffs)
 
 ## API
 
-| Method | Path                  | Description                           |
-| ------ | --------------------- | ------------------------------------- |
-| `POST` | `/v1/traces`          | Ingest a run + all spans (idempotent) |
-| `GET`  | `/v1/runs`            | List runs (most recent first)         |
-| `GET`  | `/v1/runs/{id}`       | Run detail with full span tree        |
-| `GET`  | `/v1/runs/{id}/spans` | Spans for a run                       |
+| Method | Path                     | Description                           |
+| ------ | ------------------------ | ------------------------------------- |
+| `POST` | `/v1/traces`             | Ingest a run + all spans (idempotent) |
+| `GET`  | `/v1/runs`               | List runs (most recent first)         |
+| `GET`  | `/v1/runs/{id}`          | Run detail with full span tree        |
+| `GET`  | `/v1/runs/{id}/spans`    | Spans for a run                       |
+| `POST` | `/v1/runs/{id}/replay`   | Store a replay diff against a run     |
+| `GET`  | `/v1/runs/{id}/replays`  | List all replay diffs for a run       |
 
 ---
 

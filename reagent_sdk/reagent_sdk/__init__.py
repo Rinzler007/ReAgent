@@ -5,6 +5,7 @@ __all__ = ["Recorder", "Run", "Span"]
 
 try:
     from reagent_sdk.callback import ReAgentCallbackHandler
-    __all__.append("ReAgentCallbackHandler")
+    from reagent_sdk.replay import ReplayEngine
+    __all__ += ["ReAgentCallbackHandler", "ReplayEngine"]
 except ImportError:
     pass  # langchain-core not installed; install reagent-sdk[langchain] to use

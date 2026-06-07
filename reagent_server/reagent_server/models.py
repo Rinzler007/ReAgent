@@ -56,3 +56,19 @@ class RunOut(BaseModel):
 
 class RunDetail(RunOut):
     spans: list[SpanOut] = Field(default_factory=list)
+
+
+# ── Replay models ────────────────────────────────────────────────────────────
+
+class ReplayIn(BaseModel):
+    new_run_id: UUID
+    summary: dict[str, Any] = Field(default_factory=dict)
+
+
+class ReplayDiffOut(BaseModel):
+    id: UUID
+    original_run_id: UUID
+    replay_run_id: UUID
+    divergence_span_id: UUID | None
+    summary: dict[str, Any]
+    created_at: datetime
