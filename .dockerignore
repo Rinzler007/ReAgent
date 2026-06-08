@@ -1,5 +1,5 @@
 venv/
-reagent_ui/node_modules/
+ui/node_modules/
 **/__pycache__/
 **/*.pyc
 **/*.pyo

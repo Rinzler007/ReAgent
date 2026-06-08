@@ -6,7 +6,7 @@ No manual run.span() / graph_span.child() needed in node code.
 
 Requires:
     ANTHROPIC_API_KEY=... (or set in .env)
-    pip install -e reagent_sdk/ langgraph langchain-anthropic python-dotenv
+    pip install -e sdk/ langgraph langchain-anthropic python-dotenv
 
 Run:
     python examples/langgraph_demo.py "What caused the 2008 financial crisis?"
@@ -18,7 +18,7 @@ import sys
 import operator
 from typing import TypedDict, Annotated
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "reagent_sdk"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "sdk"))
 
 from dotenv import load_dotenv
 load_dotenv()

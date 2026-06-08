@@ -33,7 +33,7 @@ This starts Postgres on 5432, the FastAPI server on 8000 and the React UI on 517
 ```bash
 python -m venv venv
 source venv/bin/activate
-pip install -e "reagent_sdk/[langchain]"
+pip install -e "sdk/[langchain]"
 pip install -r examples/requirements.txt
 ```
 

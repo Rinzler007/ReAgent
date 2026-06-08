@@ -13,7 +13,7 @@ import sys
 import os
 
 # Allow running without install by adding the sdk to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "reagent_sdk"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "sdk"))
 
 from reagent_sdk import Recorder
 

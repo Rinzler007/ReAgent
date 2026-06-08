@@ -9,6 +9,6 @@ build/
 *.env
 .DS_Store
 node_modules/
-reagent_ui/dist/
+ui/dist/
 *.log
 .pytest_cache/
