@@ -1,8 +1,24 @@
 @import "tailwindcss";
 
+mark.diff-del {
+  background: #fef2f2;
+  color: #991b1b;
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+mark.diff-ins {
+  background: #f0fdf4;
+  color: #166534;
+  text-decoration: none;
+  border-radius: 2px;
+}
+
 body {
   margin: 0;
-  background: #0f1117;
-  color: #e2e8f0;
+  background: #ffffff;
+  color: #111827;
   font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

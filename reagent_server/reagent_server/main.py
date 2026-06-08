@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from reagent_server.routes import ingest, runs, replay
+from reagent_server.routes import ingest, runs, replay, run
 
 app = FastAPI(
     title="ReAgent",
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(ingest.router)
 app.include_router(runs.router)
 app.include_router(replay.router)
+app.include_router(run.router)
 
 
 @app.get("/health")

@@ -1,13 +1,13 @@
 const colours = {
-  graph:     'bg-violet-900/50 text-violet-300 border border-violet-700',
-  node:      'bg-blue-900/50 text-blue-300 border border-blue-700',
-  llm_call:  'bg-amber-900/50 text-amber-300 border border-amber-700',
-  tool_call: 'bg-teal-900/50 text-teal-300 border border-teal-700',
+  graph:     'bg-violet-50 text-violet-700 border border-violet-200',
+  node:      'bg-sky-50 text-sky-700 border border-sky-200',
+  llm_call:  'bg-amber-50 text-amber-700 border border-amber-200',
+  tool_call: 'bg-teal-50 text-teal-700 border border-teal-200',
 }
 
 export default function KindBadge({ kind }) {
   return (
-    <span className={`text-xs px-2 py-0.5 rounded font-mono ${colours[kind] ?? 'bg-slate-700 text-slate-300'}`}>
+    <span className={`text-xs px-2 py-0.5 rounded font-mono ${colours[kind] ?? 'bg-gray-100 text-gray-600 border border-gray-200'}`}>
       {kind}
     </span>
   )

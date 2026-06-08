@@ -1,0 +1,10 @@
+venv/
+reagent_ui/node_modules/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/dist/
+**/*.egg-info/
+.git/
+.env

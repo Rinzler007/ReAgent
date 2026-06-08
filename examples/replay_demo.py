@@ -36,20 +36,18 @@ from reagent_sdk import Recorder, ReAgentCallbackHandler, ReplayEngine
 
 @tool
 def web_search(query: str) -> str:
-    """Search the web for information about a topic."""
-    results = {
-        "inflation":     "Inflation is the rate at which the general level of prices rises, eroding purchasing power.",
-        "federal":       "The Federal Reserve sets interest rates to control inflation and employment.",
-        "mortgage":      "Mortgage-backed securities bundle home loans into tradeable assets.",
-        "subprime":      "Subprime mortgages are loans issued to borrowers with poor credit histories.",
-        "lehman":        "Lehman Brothers filed for bankruptcy in September 2008, the largest in US history.",
-        "credit":        "Credit default swaps are derivatives that transfer the risk of debt default.",
-    }
-    q = query.lower()
-    for keyword, snippet in results.items():
-        if keyword in q:
-            return snippet
-    return f"No specific results found for: {query}"
+    """Search the web for current information about any topic."""
+    try:
+        from duckduckgo_search import DDGS
+        results = list(DDGS().text(query, max_results=4))
+        if not results:
+            return f"No results found for: {query}"
+        return "\n\n".join(
+            f"[{r['title']}]\n{r['body']}"
+            for r in results
+        )
+    except Exception as e:
+        return f"Search failed: {e}"
 
 
 # ── Graph builder ──────────────────────────────────────────────────────────────
@@ -61,7 +59,7 @@ def build_graph(llm: ChatAnthropic, tools: list):
 # ── Record mode ────────────────────────────────────────────────────────────────
 
 def record(question: str, model: str, server_url: str) -> str:
-    llm = ChatAnthropic(model=model, max_tokens=512)
+    llm = ChatAnthropic(model=model, max_tokens=1024)
     tools = [web_search]
     app = build_graph(llm, tools)
     recorder = Recorder(agent_name="replay-demo", server_url=server_url)
@@ -94,7 +92,7 @@ def replay(original_run_id: str, new_model: str, server_url: str) -> None:
     engine = ReplayEngine(spans)
     print(f"Fixtures loaded for tools: {engine.fixture_tool_names or ['none']}")
 
-    llm = ChatAnthropic(model=new_model, max_tokens=512)
+    llm = ChatAnthropic(model=new_model, max_tokens=1024)
     wrapped_tools = engine.wrap_tools([web_search])
     app = build_graph(llm, wrapped_tools)
 

@@ -102,21 +102,28 @@ class ReplayEngine:
         orig_tools = [s for s in orig if s.get("kind") == "tool_call"]
         new_tools  = [s for s in new  if s.get("kind") == "tool_call"]
 
+        def _prose_text(span: dict[str, Any]) -> str:
+            """Return the prose text from an LLM span or empty string if it is a tool-use turn."""
+            raw = (span.get("output") or {}).get("text", "")
+            if not raw or not isinstance(raw, str):
+                return ""
+            if "tool_use" in raw or "tool_calls" in raw:
+                return ""
+            return raw
+
+        orig_prose = [(i, s) for i, s in enumerate(orig_llm) if _prose_text(s)]
+        new_prose  = [(i, s) for i, s in enumerate(new_llm)  if _prose_text(s)]
+
         llm_changes = []
-        for i, (o, n) in enumerate(zip(orig_llm, new_llm)):
-            o_text = (o.get("output") or {}).get("text", "")
-            n_text = (n.get("output") or {}).get("text", "")
-            # Skip turns where either side is a structured tool request rather than prose
-            def _is_tool_turn(t: Any) -> bool:
-                return not t or not isinstance(t, str) or "'type': 'tool_use'" in t
-            if _is_tool_turn(o_text) or _is_tool_turn(n_text):
-                continue
+        for prose_idx, ((o_i, o), (n_i, n)) in enumerate(zip(orig_prose, new_prose)):
+            o_text = _prose_text(o)
+            n_text = _prose_text(n)
             if o_text != n_text:
                 llm_changes.append({
-                    "call_index": i,
+                    "call_index": prose_idx,
                     "span_name": n.get("name"),
-                    "original_text": o_text[:500],
-                    "new_text": n_text[:500],
+                    "original_text": o_text[:2000],
+                    "new_text": n_text[:2000],
                 })
 
         return {

@@ -1,8 +1,8 @@
 # ReAgent
 
-**Deterministic replay & diff harness for LangGraph agents.**
+**Deterministic replay and diff harness for LangGraph agents.**
 
-The SDK auto-instruments agent runs via a LangGraph callback handler or a manual context-manager API. The replay engine re-executes recorded runs with mocked tool responses to isolate prompt/model regressions from environmental changes. Postgres-backed, ~5-min self-host via Docker.
+The SDK auto-instruments agent runs via a LangGraph callback handler or a manual context-manager API. The replay engine re-executes recorded runs with mocked tool responses to isolate prompt and model regressions from environmental changes. Postgres-backed, self-hosted via Docker.
 
 **Stack:** Python, FastAPI, PostgreSQL, LangGraph, React, Vite
 
@@ -10,61 +10,44 @@ The SDK auto-instruments agent runs via a LangGraph callback handler or a manual
 
 ## The problem
 
-You change a prompt. Did it break anything ? Existing tools (LangSmith, Braintrust) show you traces but won't let you re-execute them deterministically with mocked tool responses. That gap is real.
+You change a prompt. Did it break anything ? Existing tools like LangSmith show you traces but won't let you re-execute them deterministically with mocked tool responses. That gap is real.
 
-ReAgent records every run as a trace, then lets you **replay** any past run with a new prompt/model while serving the original tool responses as fixtures, so you're diffing the LLM's reasoning, not random tool variance.
+ReAgent records every run as a trace, then lets you replay any past run with a new prompt or model while serving the original tool responses as fixtures, so you're diffing the LLM's reasoning, not random tool variance.
 
 ---
 
-## Quick start (5 minutes)
+## Quick start
 
-### 1. Start the backend
+### 1. Start everything
 
 ```bash
-git clone https://github.com/Rinzler007/ReAgent
 cd ReAgent
+export ANTHROPIC_API_KEY=sk-ant-...   # needed to run agents from the UI
 docker compose up -d
 ```
 
-### 2. Install the SDK
+This starts Postgres on 5432, the FastAPI server on 8000 and the React UI on 5173. Each service waits for the one before it to pass its healthcheck. Open `http://localhost:5173` once the UI container is up (about 30 seconds on first run).
+
+### 2. Install the SDK (to run examples from the terminal)
 
 ```bash
-# For LangGraph auto-instrumentation (recommended)
+python -m venv venv
+source venv/bin/activate
 pip install -e "reagent_sdk/[langchain]"
-
-# For manual instrumentation only
-pip install -e reagent_sdk/
-```
-
-### 3. Run the zero-cost demo (no API key needed)
-
-```bash
-python examples/hello_trace.py
-```
-
-### 4. Open the trace explorer
-
-```bash
-cd reagent_ui && npm install && npm run dev
-```
-
-Visit `http://localhost:5173` to browse runs and inspect span trees.
-
-### 5. Or check via API
-
-```bash
-curl http://localhost:8000/v1/runs | python -m json.tool
-```
-
----
-
-## Real LangGraph agent
-
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
 pip install -r examples/requirements.txt
-python examples/langgraph_demo.py "What caused the 2008 financial crisis ?"
 ```
+
+### 3. Run an agent from the browser
+
+Go to `http://localhost:5173/run`, type any question, pick a model and click Run. The agent executes on the server and you are redirected to the full trace when it finishes.
+
+### 4. Or run the zero-cost demo from the terminal (no API key needed)
+
+```bash
+venv/bin/python examples/hello_trace.py
+```
+
+Refresh `http://localhost:5173/explorer` and the run appears in the list.
 
 ---
 
@@ -73,12 +56,17 @@ python examples/langgraph_demo.py "What caused the 2008 financial crisis ?"
 Record a baseline run, then replay it with a different model. Tool outputs are served from the recording so the diff isolates LLM reasoning from tool variance.
 
 ```bash
-# Record
+# Record a baseline (default question: 2008 financial crisis)
 venv/bin/python examples/replay_demo.py
 
-# Replay with a different model (paste your run ID)
+# Record with a custom question
+venv/bin/python examples/replay_demo.py --question "Your question here"
+
+# Replay against a different model (paste your run ID from the UI or terminal output)
 venv/bin/python examples/replay_demo.py --replay <run-id> --model claude-haiku-4-5-20251001
 ```
+
+After the replay finishes, open the original run in the explorer and click "View diff" in the Replays section.
 
 Or use `ReplayEngine` directly in your own code:
 
@@ -151,30 +139,32 @@ Traces are shipped automatically when the `with recorder.run()` block exits. Tel
 ## Architecture
 
 ```
-Your Agent Code (LangGraph app: unchanged)
-       │  callback or context-manager instrumentation
-       \/
-reagent SDK  (thin Python wrapper)
-       │  HTTP POST /v1/traces
-       \/
-reagent Server  (FastAPI)        <----- React UI  (Vite, port 5173)
-       │                                  │  GET /v1/runs, /v1/runs/{id}
-       \/
-PostgreSQL  (runs / spans / replay_diffs)
+Browser (http://localhost:5173)
+  Landing page / Trace explorer / Run agent UI
+           |
+           | GET /v1/runs, POST /v1/run
+           v
+reagent Server  (FastAPI, port 8000)
+  |                          |
+  | runs agent               | stores traces
+  v                          v
+LangGraph + SDK          PostgreSQL
+(tool fixture replay)    (runs / spans / replay_diffs)
 ```
 
 ---
 
 ## API
 
-| Method | Path                     | Description                           |
-| ------ | ------------------------ | ------------------------------------- |
-| `POST` | `/v1/traces`             | Ingest a run + all spans (idempotent) |
-| `GET`  | `/v1/runs`               | List runs (most recent first)         |
-| `GET`  | `/v1/runs/{id}`          | Run detail with full span tree        |
-| `GET`  | `/v1/runs/{id}/spans`    | Spans for a run                       |
-| `POST` | `/v1/runs/{id}/replay`   | Store a replay diff against a run     |
-| `GET`  | `/v1/runs/{id}/replays`  | List all replay diffs for a run       |
+| Method | Path                    | Description                              |
+| ------ | ----------------------- | ---------------------------------------- |
+| `POST` | `/v1/run`               | Run an agent from the UI, returns run ID |
+| `POST` | `/v1/traces`            | Ingest a run and all spans (idempotent)  |
+| `GET`  | `/v1/runs`              | List runs (most recent first)            |
+| `GET`  | `/v1/runs/{id}`         | Run detail with full span tree           |
+| `GET`  | `/v1/runs/{id}/spans`   | Spans for a run                          |
+| `POST` | `/v1/runs/{id}/replay`  | Store a replay diff against a run        |
+| `GET`  | `/v1/runs/{id}/replays` | List all replay diffs for a run          |
 
 ---
 
@@ -187,7 +177,7 @@ runs (id, parent_run_id, agent_name, status, started_at,
 spans (id, run_id, parent_span_id, kind, name,
        started_at, finished_at, input, output, error)
 
-replay_diffs (id original_run_id, replay_run_id,
+replay_diffs (id, original_run_id, replay_run_id,
               divergence_span_id, summary)
 ```
 
@@ -197,15 +187,15 @@ replay_diffs (id original_run_id, replay_run_id,
 
 ## Cost
 
-LLM API calls only. Use `claude-haiku-4-5` or Groq's free tier for dev. Everything else (Postgres, FastAPI, React) is free. Set a monthly spend cap on day one.
+LLM API calls only. Use `claude-haiku-4-5` for dev. Everything else (Postgres, FastAPI, React) is free. Set a monthly spend cap on day one.
 
 ---
 
-## What's deliberately NOT built (v1)
+## What's deliberately not built (v1)
 
-- Multi-tenancy / auth
+- Multi-tenancy and auth
 - Real-time streaming UI
-- Own eval framework (link to promptfoo/DeepEval instead)
+- Own eval framework (use promptfoo or DeepEval instead)
 - Other frameworks (CrewAI, Claude Agent SDK): v2
 - Hosted SaaS: local self-host only
 
@@ -213,4 +203,4 @@ LLM API calls only. Use `claude-haiku-4-5` or Groq's free tier for dev. Everythi
 
 ## Resume line
 
-> **ReAgent**: Deterministic replay & diff harness for LangGraph agents. SDK auto-instruments agent runs; replay engine re-executes recorded runs with mocked tool responses to isolate prompt/model regressions from environmental changes. Postgres-backed, ~5-min self-host via Docker. Python, FastAPI, React, LangGraph.
+> **ReAgent**: Deterministic replay and diff harness for LangGraph agents. SDK auto-instruments agent runs; replay engine re-executes recorded runs with mocked tool responses to isolate prompt and model regressions from environmental changes. Postgres-backed, self-hosted via Docker. Python, FastAPI, React, LangGraph.

@@ -6,3 +6,4 @@ pydantic>=2.7
 langgraph>=0.2
 langchain-anthropic>=0.2
 langchain-core>=0.3
+duckduckgo-search>=6.0

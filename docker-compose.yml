@@ -17,28 +17,42 @@ services:
       retries: 5
 
   server:
-    build: ./reagent_server
+    build:
+      context: .
+      dockerfile: reagent_server/Dockerfile
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://reagent:reagent@postgres:5432/reagent
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - ./reagent_server:/app
     command: uvicorn reagent_server.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/runs')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   ui:
     image: node:22-alpine
     working_dir: /app
+    environment:
+      API_TARGET: http://server:8000
     volumes:
       - ./reagent_ui:/app
+      - ui_node_modules:/app/node_modules
     ports:
       - "5173:5173"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     command: sh -c "npm install && npm run dev -- --host"
 
 volumes:
   postgres_data:
+  ui_node_modules:
